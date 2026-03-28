@@ -21,19 +21,29 @@ What does it look like?
 How do I launch it?
 ------
 ### Using Python ###
-First of all, get python 3 & then get pip.
+First of all, get Python 3.10.
 
-Optionally, you could use virtualenv. If you are using virtualenv, do 
-```virtualenv venv && source venv/bin/activate ```
-and use python instead of python3, and pip instead of pip3
-
+#### Traditional flow (python3 + pip3 + virtualenv) ####
 1. [Python 3](https://www.python.org/downloads/)
 2. [Pip](https://pip.pypa.io/en/stable/installing/)
 3. Then, clone this repo (attention! it will be cloned to the current directory, so make sure you do it in some kinda documents or special one) ```git clone https://github.com/delneg/noteshrinker-django/ ```
-4. Then, ```cd noteshrinker_django``` and ```pip3 install -r requirements.txt```
-5. Tweak the settings in the bottom of the settings.py file.
-6. Finally,  from the root directory of the project ```python3 manage.py migrate``` and  ```python3 manage.py runserver ```
-7. Navigate to [http://localhost:8000](http://localhost:8000) in your browser!
+4. Then, ```cd noteshrinker_django```
+5. Optionally, create and activate virtualenv: ```virtualenv venv && source venv/bin/activate```
+6. Install dependencies: ```pip3 install -r requirements.txt```
+7. Tweak the settings in the bottom of the settings.py file.
+8. Finally, from the root directory of the project: ```python3 manage.py migrate``` and ```python3 manage.py runserver```
+9. Navigate to [http://localhost:8000](http://localhost:8000) in your browser!
+
+#### uv flow (recommended) ####
+1. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
+2. Clone this repo: ```git clone https://github.com/delneg/noteshrinker-django/ ```
+3. Then, ```cd noteshrinker_django```
+4. Initialize a uv project: ```uv init```
+5. Install dependencies from requirements: ```uv add -r requirements.txt```
+6. Tweak the settings in the bottom of the settings.py file.
+7. Run migrations: ```uv run python manage.py migrate```
+8. Start server: ```uv run python manage.py runserver```
+9. Navigate to [http://localhost:8000](http://localhost:8000) in your browser!
 
 ### Using Docker (not for production) ###
 Make sure you have Docker installed.
