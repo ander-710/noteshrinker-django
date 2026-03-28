@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import re
 import string
 import zipfile
 
@@ -21,6 +22,15 @@ def random_string(N):
     return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
 
 
+def clean_download_basename(value, default='document'):
+    value = (value or '').strip()
+    value = os.path.basename(value)
+    value = re.sub(r'\s+', ' ', value)
+    value = re.sub(r'[^\w\-. ]', '', value)
+    value = value.strip(' ._-')
+    return value or default
+
+
 @require_GET
 def download_pdf(request):
     filename = request.GET['filename']
@@ -28,7 +38,15 @@ def download_pdf(request):
     if os.path.exists(file_path):
         with open(file_path, 'rb') as fh:
             response = HttpResponse(fh.read(), content_type="application/pdf")
-            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
+            requested_name = request.GET.get('download_name', '')
+            if requested_name:
+                base_name = clean_download_basename(requested_name, default='document')
+            else:
+                base_name = os.path.splitext(os.path.basename(file_path))[0]
+                if '_' in base_name:
+                    base_name = base_name.split('_', 1)[1]
+                base_name = clean_download_basename(base_name, default='document')
+            response['Content-Disposition'] = 'attachment; filename="{}.pdf"'.format(base_name)
             return response
     else:
         return HttpResponseBadRequest()
@@ -36,6 +54,8 @@ def download_pdf(request):
 
 def download_zip(request):
     images = request.GET.getlist('images')
+    if not images:
+        return HttpResponseBadRequest()
     compression = zipfile.ZIP_DEFLATED
     image_prefix = images[0][:images[0].find('_')]
     zipfile_name = os.path.join(settings.PNG_ROOT, 'noteshrinker_' + image_prefix + '_' + str(len(images)) + '.zip')
@@ -49,7 +69,12 @@ def download_zip(request):
     zf.close()
     with open(zipfile_name, 'rb') as fh:
         response = HttpResponse(fh.read(), content_type="application/x-zip-compressed")
-        response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(zipfile_name)
+        requested_name = request.GET.get('archive_name', '')
+        if requested_name:
+            zip_base_name = clean_download_basename(requested_name, default='document')
+        else:
+            zip_base_name = clean_download_basename(os.path.splitext(os.path.basename(zipfile_name))[0], default='document')
+        response['Content-Disposition'] = 'attachment; filename="{}.zip"'.format(zip_base_name)
         return response
 
 
@@ -88,6 +113,7 @@ def shrink(request):
         normalized_pdfname = raw_pdfname[:-4]
     else:
         normalized_pdfname = raw_pdfname
+    normalized_pdfname = clean_download_basename(normalized_pdfname, default='document')
     pdfname = random_string(settings.RANDOM_STRING_LEN) + "_" + normalized_pdfname + '.pdf'
 
     basename = random_string(settings.RANDOM_STRING_LEN) + "_" + request.POST['basename']
@@ -111,7 +137,12 @@ def shrink(request):
     }
     pngs, pdf = notescan_main(AttrDict(options))
 
-    return JsonResponse({"pngs": pngs, "pdf": pdfname})
+    return JsonResponse({
+        "pngs": pngs,
+        "pdf": pdfname,
+        "pdf_download": normalized_pdfname + '.pdf',
+        "zip_download": normalized_pdfname + '.zip'
+    })
 
 
 class PictureCreateView(CreateView):
