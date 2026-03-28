@@ -120,7 +120,7 @@
 
         <!-- The fileinput-button span is used to style the file input field as button -->
         <div class="col-md-6" id="first-col">
-            <form id="fileupload" method="post" action="/{{ lang_code }}/" enctype="multipart/form-data">{% csrf_token %}
+            <form id="fileupload" method="post" action="/{{ lang_code }}/" enctype="multipart/form-data" data-ajax="false" data-enhance="false">{% csrf_token %}
 
                 <div class="row fileupload-buttonbar">
                     <!-- The fileinput-button span is used to style the file input field as button -->
@@ -143,7 +143,7 @@
                     </div>
 
                     <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
-                    <button type="submit" class="btn btn-primary start btn-md">
+                    <button type="button" class="btn btn-primary start btn-md">
                         <i class="glyphicon glyphicon-upload"></i>
                         <span>{% trans "Загрузить все" %}</span>
                     </button>
@@ -389,15 +389,17 @@
                     url: '/shrink',
                     success: function (data) {
                         $("#fileshrink-spinner").hide();
-                        var proper_pdf_name = data.pdf.substr(data.pdf.indexOf('_') + 1);
+                        var proper_pdf_name = data.pdf_download || data.pdf.substr(data.pdf.indexOf('_') + 1);
+                        var proper_zip_name = data.zip_download || $("#pdf-name").val()+'.zip';
+                        var requested_name = proper_pdf_name.replace(/\.pdf$/i, '');
                         var download_pdf_button = $('#download-pdf-button');
                         download_pdf_button.removeClass('disabled');
-                        download_pdf_button.attr('href', '/download_pdf?filename=' + data.pdf);
+                        download_pdf_button.attr('href', '/download_pdf?filename=' + encodeURIComponent(data.pdf) + '&download_name=' + encodeURIComponent(requested_name));
                         download_pdf_button.attr('download', proper_pdf_name);
                         var download_zip_button = $("#download-zip-button");
                         download_zip_button.removeClass('disabled');
-                        download_zip_button.attr('href','/download_zip?'+arrayToQueryString(data.pngs,'images'));
-                        download_zip_button.attr('download', $("#pdf-name").val()+'.zip');
+                        download_zip_button.attr('href','/download_zip?'+arrayToQueryString(data.pngs,'images') + '&archive_name=' + encodeURIComponent(requested_name));
+                        download_zip_button.attr('download', proper_zip_name);
                     },
                     error: function (data) {
                         $("#fileshrink-button").button('reset');
