@@ -28,7 +28,7 @@ def download_pdf(request):
     if os.path.exists(file_path):
         with open(file_path, 'rb') as fh:
             response = HttpResponse(fh.read(), content_type="application/pdf")
-            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path) + ".pdf"
+            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
             return response
     else:
         return HttpResponseBadRequest()
@@ -83,11 +83,12 @@ def shrink(request):
         value_threshold = float(request.POST['value_threshold'])
     except ValueError as e:
         return HttpResponseBadRequest(str(e))
-    if request.POST['pdfname'].find('.pdf') == -1:
-
-        pdfname = random_string(settings.RANDOM_STRING_LEN) + "_" + request.POST['pdfname'] + '.pdf'
+    raw_pdfname = request.POST['pdfname'].strip()
+    if raw_pdfname.lower().endswith('.pdf'):
+        normalized_pdfname = raw_pdfname[:-4]
     else:
-        pdfname = random_string(settings.RANDOM_STRING_LEN) + "_" + request.POST['pdfname']
+        normalized_pdfname = raw_pdfname
+    pdfname = random_string(settings.RANDOM_STRING_LEN) + "_" + normalized_pdfname + '.pdf'
 
     basename = random_string(settings.RANDOM_STRING_LEN) + "_" + request.POST['basename']
     options = {

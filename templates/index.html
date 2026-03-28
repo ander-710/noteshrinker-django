@@ -397,7 +397,7 @@
                         var download_zip_button = $("#download-zip-button");
                         download_zip_button.removeClass('disabled');
                         download_zip_button.attr('href','/download_zip?'+arrayToQueryString(data.pngs,'images'));
-                        download_pdf_button.attr('download', $("#pdf-name").val()+'.zip');
+                        download_zip_button.attr('download', $("#pdf-name").val()+'.zip');
                     },
                     error: function (data) {
                         $("#fileshrink-button").button('reset');
