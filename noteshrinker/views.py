@@ -95,7 +95,7 @@ def shrink(request):
         "filenames": existing_files,  # массив путей к файлам
         "global_palette": on_off(request.POST['global_palette']),  # одна палитра для всех картинок
         "num_colors": num_colors,  # цветов на выходе
-        "pdf_cmd": 'convert %i %o',  # команда для пдф
+        "pdf_cmd": 'magick %i %o',  # команда для пдф
         "pdfname": os.path.join(settings.PDF_ROOT, pdfname),  # название выходного пдф файла
         "postprocess_cmd": None,
         "postprocess_ext": '_post.png',  # название после процессинга (?)
