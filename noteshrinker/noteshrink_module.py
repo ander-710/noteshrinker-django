@@ -133,8 +133,13 @@ value.
     cmin = rgb.min(axis=axis).astype(np.float32)
     delta = cmax - cmin
 
-    saturation = delta.astype(np.float32) / cmax.astype(np.float32)
-    saturation = np.where(cmax == 0, 0, saturation)
+    # Avoid divide-by-zero warnings by computing only where cmax != 0.
+    saturation = np.divide(
+        delta.astype(np.float32),
+        cmax.astype(np.float32),
+        out=np.zeros_like(delta, dtype=np.float32),
+        where=cmax != 0,
+    )
 
     value = cmax / 255.0
 
@@ -421,19 +426,29 @@ their samples together into one large array.
 def emit_pdf(outputs, options):
     '''Runs the PDF conversion command to generate the PDF.'''
 
-    cmd = options.pdf_cmd
-    cmd = cmd.replace('%o', options.pdfname)
+    cmd_template = shlex.split(options.pdf_cmd)
+    cmd = []
+
+    for token in cmd_template:
+        if token == '%i':
+            cmd.extend(outputs)
+        elif token == '%o':
+            cmd.append(options.pdfname)
+        else:
+            cmd.append(token.replace('%o', options.pdfname))
+
     if len(outputs) > 2:
-        cmd_print = cmd.replace('%i', ' '.join(outputs[:2] + ['...']))
+        shown_outputs = outputs[:2] + ['...']
     else:
-        cmd_print = cmd.replace('%i', ' '.join(outputs))
-    cmd = cmd.replace('%i', ' '.join(outputs))
+        shown_outputs = outputs
+
+    cmd_print = ' '.join(shlex.quote(part) for part in ([cmd[0]] + shown_outputs + [options.pdfname]))
 
     if not options.quiet:
         logger.info('running PDF command "{}"...'.format(cmd_print))
 
     try:
-        result = subprocess.call(shlex.split(cmd))
+        result = subprocess.call(cmd)
     except OSError:
         result = -1
 
